@@ -274,35 +274,3 @@ if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
 
         except Exception as e:
             st.error(f"Configuration is invalid: {e}")
-
-    #test_data = {
-    #    "data_contract": {
-    #        "expectations": [
-    #            {"name": "field1", "type": "string", "constraints": '{"max_length": 255}'},
-    #            {"name": "field2", "type": "integer", "constraints": '{"min_value": 0}'}
-    #        ],
-    #        "primary_key": ["field1"]
-    #    }
-    #}
-    #edited_data = st.data_editor(
-    #    test_data['data_contract']['expectations'], hide_index=True,
-    #    num_rows="dynamic", width="stretch"
-    #)
-
-    #st.success("Configuration tested successfully!")
-    #df = pd.DataFrame(edited_data)
-
-    ## st.download_button(
-    ##     label="Download CSV",
-    ##     data=df.to_csv().encode("utf-8"),
-    ##     file_name="data.csv",
-    ##     mime="text/csv",
-    ##     icon=":material/download:"
-    ## )
-    #st.download_button(
-    #    label="Download JSON",
-    #    data=df.to_json().encode("utf-8"),
-    #    file_name="data.json",
-    #    mime="application/json",
-    #    icon=":material/download:"
-    #)
