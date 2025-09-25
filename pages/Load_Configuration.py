@@ -1,8 +1,11 @@
+import json
 import time
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
+import src.expectation_manager as em
+import src.gx_utils as gx_utils
 
 st.set_page_config(page_title="Load Configuration", page_icon="⚙️")
 
@@ -24,53 +27,230 @@ uploaded_files = st.file_uploader(
     "Upload sample data (csv) and the configuration file of the data contract (json or yaml):",
     type=["csv", "json", "yaml"], accept_multiple_files=True
 )
-sample_data_file = 0
-data_contract_configuration_file = 0
+
+sample_data_file = None
+sample_data_file_count = 0
+data_contract_configuration_file = None
+data_contract_configuration_file_count = 0
 
 if uploaded_files is not None:
     for file in uploaded_files:
         if file.type == "text/csv":
-            st.write(f"Sample data uploaded: {file.name}")
-            sample_data_file += 1
+            #st.write(f"Sample data uploaded: {file.name}")
+            sample_data_file = file
+            sample_data_file_count += 1
         elif file.type == "text/json" or file.type == "application/x-yaml":
-            st.write(f"Data contract configuration file uploaded: {file.name}")
-            data_contract_configuration_file += 1
-        if sample_data_file > 1 or data_contract_configuration_file > 1:
+            #st.write(f"Data contract configuration file uploaded: {file.name}")
+            data_contract_configuration_file = file
+            data_contract_configuration_file_count += 1
+        if sample_data_file_count > 1 or data_contract_configuration_file_count > 1:
             st.error(
                 "Please upload only one sample data (CSV) file and one data contract "
                 "configuration (JSON, YAML) file."
             )
 
-if sample_data_file == 1 and data_contract_configuration_file == 1:
+# Check if both files are uploaded and if not tell the user what is missing with a warning
+if sample_data_file_count == 0:
+    st.warning("Please upload a sample data file in CSV format.")
+if data_contract_configuration_file_count == 0:
+    st.warning("Please upload a data contract configuration file in JSON or YAML format.")
+
+
+if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
     st.success("Both files uploaded successfully!")
-    test_data = {
-        "data_contract": {
-            "expectations": [
-                {"name": "field1", "type": "string", "constraints": '{"max_length": 255}'},
-                {"name": "field2", "type": "integer", "constraints": '{"min_value": 0}'}
-            ],
-            "primary_key": ["field1"]
-        }
-    }
-    edited_data = st.data_editor(
-        test_data['data_contract']['expectations'], hide_index=True,
-        num_rows="dynamic", width="stretch"
+
+    # Show CSV data in a table
+    df = pd.read_csv(sample_data_file)
+    st.dataframe(df)
+
+    # Load expectations yaml as a Pydantic model and show in a table
+    pydantic_contract = em.load_suite_yaml(data_contract_configuration_file, is_file=False)
+
+    # Show the data contract configuration in a table
+    st.header("Data Contract Configuration:")
+
+    contract_dict = json.loads(pydantic_contract.model_dump_json(indent=2))
+    st.dataframe(
+        contract_dict['expectations'],
+        hide_index=True,
+        column_config={
+            'id': 'Rule Name',
+            'expectation': 'Params',
+            'severity': 'Severity',
+            'source': 'Source',
+            'description': 'Description',
+        },
+        column_order=('id', 'expectation', 'severity', 'source', 'description', 'enabled'),
+        width="stretch"
     )
 
-    st.success("Configuration tested successfully!")
-    df = pd.DataFrame(edited_data)
+    # Allow user to validate the configuration
+    with st.spinner("Validating configuration..."):
+        time.sleep(1)  # Simulate some processing time
+        try:
+            validation_results = gx_utils.run_gx_dataset_validation(
+                em.pydantic_to_gx(pydantic_contract), df
+            )
+            if validation_results.success:
+                st.success("Dataset passed!!")
+            else:
+                st.error("Dataset does not meet expectations.")
+                analysis = gx_utils.analyze_validation_results(validation_results)
 
-    # st.download_button(
-    #     label="Download CSV",
-    #     data=df.to_csv().encode("utf-8"),
-    #     file_name="data.csv",
-    #     mime="text/csv",
-    #     icon=":material/download:"
-    # )
-    st.download_button(
-        label="Download JSON",
-        data=df.to_json().encode("utf-8"),
-        file_name="data.json",
-        mime="application/json",
-        icon=":material/download:"
-    )
+                # Show an the analysis of errors
+                fail_analysis = gx_utils.get_failed_expectations_summary(validation_results)
+
+                # Print json analysis for debugging
+                with st.expander("Show full JSON analysis"):
+                    st.json(fail_analysis)
+
+                # Display failure summary metrics
+                st.subheader("📊 Failure Summary")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Failures", fail_analysis['total_failures'])
+                with col2:
+                    st.metric("Failed Columns", len(fail_analysis['failure_summary']['failed_by_column']))
+                with col3:
+                    critical_failures = len(fail_analysis['failure_summary']['critical_failures'])
+                    st.metric("Critical Failures", critical_failures)
+
+                # Display failed expectations in a table
+                st.subheader("❌ Failed Expectations")
+                failed_expectations_df = pd.DataFrame([
+                    {
+                        'Expectation ID': exp['expectation_id'],
+                        'Type': exp['expectation_type'],
+                        'Column': exp['column'],
+                        'Severity': exp['severity'].upper(),
+                        'Invalid %': f"{exp['failure_info']['invalid_percentage']:.1f}%",
+                        'Invalid Count': exp['failure_info']['invalid_count'],
+                        'Description': exp['description'][:100] + "..." if len(exp['description']) > 100 else exp['description']
+                    }
+                    for exp in fail_analysis['failed_expectations']
+                ])
+
+                st.dataframe(
+                    failed_expectations_df,
+                    use_container_width=True,
+                    column_config={
+                        'Severity': st.column_config.TextColumn(
+                            width="small",
+                        ),
+                        'Invalid %': st.column_config.TextColumn(
+                            width="small",
+                        ),
+                        'Invalid Count': st.column_config.NumberColumn(
+                            width="small",
+                        )
+                    }
+                )
+
+                # Show failure breakdown by type and column
+                st.subheader("📈 Failure Analysis")
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.write("**Failures by Expectation Type:**")
+                    failure_by_type_df = pd.DataFrame([
+                        {'Expectation Type': exp_type, 'Count': count}
+                        for exp_type, count in fail_analysis['failure_summary']['failed_by_type'].items()
+                    ])
+                    st.dataframe(failure_by_type_df, hide_index=True)
+
+                with col2:
+                    st.write("**Failures by Column:**")
+                    failure_by_column_df = pd.DataFrame([
+                        {'Column': column, 'Failure Count': count}
+                        for column, count in fail_analysis['failure_summary']['failed_by_column'].items()
+                    ])
+                    st.dataframe(failure_by_column_df, hide_index=True)
+
+                # Detailed view of specific failures
+                st.subheader("🔍 Detailed Failure Information")
+                selected_expectation = st.selectbox(
+                    "Select an expectation to see detailed failure information:",
+                    options=[exp['expectation_id'] for exp in fail_analysis['failed_expectations']],
+                    key="expectation_selector"
+                )
+
+                if selected_expectation:
+                    selected_exp = next(
+                        exp for exp in fail_analysis['failed_expectations']
+                        if exp['expectation_id'] == selected_expectation
+                    )
+
+                    st.write(f"**Expectation:** {selected_exp['expectation_type']}")
+                    st.write(f"**Column:** {selected_exp['column']}")
+                    st.write(f"**Description:** {selected_exp['description']}")
+                    st.write(f"**Severity:** {selected_exp['severity'].upper()}")
+                    st.write(f"**Source:** {selected_exp['source']}")
+
+                    # Show failure details
+                    failure_info = selected_exp['failure_info']
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Total Elements", failure_info['total_elements'])
+                    with col2:
+                        st.metric("Invalid Count", failure_info['invalid_count'])
+                    with col3:
+                        st.metric("Invalid Percentage", f"{failure_info['invalid_percentage']:.1f}%")
+
+                    # Show invalid values if available
+                    if failure_info.get('invalid_values'):
+                        st.write("**Invalid Values Found:**")
+                        invalid_values_df = pd.DataFrame([
+                            {'Value': str(val), 'Count': count.get('count', 1) if isinstance(count, dict) else 1}
+                            for val, count in zip(
+                                failure_info['invalid_values'],
+                                failure_info.get('value_counts', failure_info['invalid_values'])
+                            )
+                        ])
+                        st.dataframe(invalid_values_df, hide_index=True)
+
+                    # Show invalid row indices
+                    if failure_info.get('invalid_indices'):
+                        st.write("**Rows with Issues (indices):**")
+                        st.write(", ".join(map(str, failure_info['invalid_indices'])))
+
+                        # Show the actual problematic rows
+                        if len(failure_info['invalid_indices']) > 0:
+                            st.write("**Problematic Data Rows:**")
+                            problematic_rows = df.iloc[failure_info['invalid_indices']]
+                            st.dataframe(problematic_rows, use_container_width=True)
+
+
+        except Exception as e:
+            st.error(f"Configuration is invalid: {e}")
+
+    #test_data = {
+    #    "data_contract": {
+    #        "expectations": [
+    #            {"name": "field1", "type": "string", "constraints": '{"max_length": 255}'},
+    #            {"name": "field2", "type": "integer", "constraints": '{"min_value": 0}'}
+    #        ],
+    #        "primary_key": ["field1"]
+    #    }
+    #}
+    #edited_data = st.data_editor(
+    #    test_data['data_contract']['expectations'], hide_index=True,
+    #    num_rows="dynamic", width="stretch"
+    #)
+
+    #st.success("Configuration tested successfully!")
+    #df = pd.DataFrame(edited_data)
+
+    ## st.download_button(
+    ##     label="Download CSV",
+    ##     data=df.to_csv().encode("utf-8"),
+    ##     file_name="data.csv",
+    ##     mime="text/csv",
+    ##     icon=":material/download:"
+    ## )
+    #st.download_button(
+    #    label="Download JSON",
+    #    data=df.to_json().encode("utf-8"),
+    #    file_name="data.json",
+    #    mime="application/json",
+    #    icon=":material/download:"
+    #)

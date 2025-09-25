@@ -701,7 +701,7 @@ def load_suite_json(json_path: str) -> GreatExpectationsSuite:
 
 def save_suite_yaml(
     pydantic_suite: GreatExpectationsSuite,
-    output_path: str
+    output_path: Optional[str] = None
 ) -> str:
     """
     Convenience function to save Pydantic suite to YAML
