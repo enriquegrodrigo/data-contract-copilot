@@ -79,15 +79,18 @@ def transform_json_structure(df):
 
 st.set_page_config(page_title="Generate Configuration", page_icon="⚙️")
 
-st.markdown("# Generate Configuration")
+st.markdown("# ⚙️ Generate Configuration")
 st.write(
     """
-    This is a generation test of a configuration file for data contracts based on a LLM.
-    You need to upload two files:
-    1. A sample data file (.csv format)
-    2. Description of the data contract (.txt format)
+    **This is a generation test of a configuration file for data contracts based on a LLM.**
 
-    After uploading the files, the application will process them and send them to the LLM to generate a configuration file.
+    📂 **You need to upload two files:**
+
+    &nbsp;&nbsp;&nbsp;&nbsp;1️⃣ A sample data file (`.csv` format)
+
+    &nbsp;&nbsp;&nbsp;&nbsp;2️⃣ Description of the data contract (`.txt` or `.md` format)
+
+    ⏳ After uploading the files, the application will process them and send them to the LLM to generate a configuration file.
     """
 )
 
