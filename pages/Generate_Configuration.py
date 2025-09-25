@@ -105,21 +105,26 @@ if uploaded_files is not None:
     for file in uploaded_files:
         if file.type == "text/csv" and not csv_file:
             st.write(f"Sample data uploaded: {file.name}")
-            # sample_data_file += 1
             csv_file = file
             extra_files = False
         elif file.type in ["text/plain", "application/octet-stream", "text/markdown"] and not doc_file:
-            st.write(f"Data contract description uploaded: {file.name}")
-            # data_contract_description_file += 1
             doc_file = file
             extra_files = False
         else:
-            st.write(file.type)
-            st.error(
-                "Please upload only one sample data (CSV) file and one data contract "
-                "description (TXT) file."
-            )
             extra_files = True
+
+# Check if both files are uploaded and if not tell the user what is missing with a warning
+if extra_files:
+    st.error(
+        "Please upload only one sample data (CSV) file and one data contract "
+        "description (TXT/MD) file."
+    )
+elif csv_file is None and doc_file is None:
+    st.warning("Please upload a sample data file in CSV format and a data contract description file in TXT/MD format.")
+elif doc_file is None and csv_file is not None:
+    st.warning("Please upload a data contract description file in TXT/MD format.")
+elif csv_file is None and doc_file is not None:
+    st.warning("Please upload a sample data file in CSV format.")
 
 
 if csv_file and doc_file and not extra_files:
