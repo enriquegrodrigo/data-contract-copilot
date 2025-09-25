@@ -1,8 +1,9 @@
+import json
 from enum import Enum
 from typing import List, Literal, Optional, Union
 
 import yaml
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, field_serializer
 
 # =============================================================================
 # MODELOS INDIVIDUALES PARA CADA TIPO DE EXPECTATION
@@ -174,6 +175,10 @@ class ExpectationWithMetadata(BaseModel):
     description: str = Field(..., description="Detailed description of the expectation and its purpose")
     source: str = Field(..., description="Source of the expectation (e.g., 'Documentation', 'Data Profiling'). Provide context.")
     severity: Literal["critical", "warning", "info"] = Field("critical", description="Severity level of the expectation failure (critical, warning, info)")
+
+    @field_serializer('expectation')
+    def serialize_expectation(self, expectation: GreatExpectation) -> str:
+        return json.dumps(expectation.model_dump())
 
 # =============================================================================
 # MODELO CONTENEDOR PARA LISTA DE EXPECTATIVAS CON METADATOS
