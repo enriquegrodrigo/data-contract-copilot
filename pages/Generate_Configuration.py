@@ -1,25 +1,32 @@
 import json
+import os
 
 import instructor
 import pandas as pd
 import streamlit as st
+from dotenv import load_dotenv
 from openai import OpenAI
 
 from src.expectation_manager import create_manager, save_suite_yaml
-from src.expectations import GreatExpectationsSuite
+from src.expectations import (ExpectColumnMaxToBeBetween,
+                              ExpectColumnMeanToBeBetween,
+                              ExpectColumnMinToBeBetween,
+                              ExpectColumnSumToBeBetween, ExpectColumnToExist,
+                              ExpectColumnValuesToBeBetween,
+                              ExpectColumnValuesToBeInSet,
+                              ExpectColumnValuesToBeOfType,
+                              ExpectColumnValuesToBeUnique,
+                              ExpectColumnValuesToMatchRegex,
+                              ExpectColumnValuesToNotBeNull,
+                              ExpectTableRowCountToBeBetween,
+                              GreatExpectationsSuite)
 from src.gx_data_extractor import DataExtractor
 from src.gx_promt_utils import create_llm_prompt, prepare_data_analysis_prompt
-from src.expectations import (
-    ExpectColumnMaxToBeBetween, ExpectColumnMeanToBeBetween,
-    ExpectColumnMinToBeBetween, ExpectColumnSumToBeBetween,
-    ExpectColumnToExist, ExpectColumnValuesToBeBetween,
-    ExpectColumnValuesToBeInSet, ExpectColumnValuesToBeOfType,
-    ExpectColumnValuesToBeUnique, ExpectColumnValuesToMatchRegex,
-    ExpectColumnValuesToNotBeNull, ExpectTableRowCountToBeBetween)
 
+load_dotenv()
 
 @st.cache_resource
-def llm_configuration_generation(df, documentation, data_profile, openai_api_key):
+def llm_configuration_generation(df, documentation, data_profile):
     """
     Genera un archivo de configuración de Great Expectations basado en un LLM
     usando la muestra de datos y la descripción del contrato de datos proporcionados.
@@ -34,7 +41,7 @@ def llm_configuration_generation(df, documentation, data_profile, openai_api_key
 
     st.write("Connecting to OpenAI...")
     client = instructor.from_openai(
-        OpenAI(api_key=openai_api_key)
+        OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     )
 
     st.write("Sending LLM prompt to OpenAI...")
@@ -73,8 +80,6 @@ def transform_json_structure(df):
 st.set_page_config(page_title="Generate Configuration", page_icon="⚙️")
 
 st.markdown("# Generate Configuration")
-st.sidebar.header("Configuration")
-openai_api_key = st.sidebar.text_input("OpenAI API Key", key="api_key", type="password")
 st.write(
     """
     This is a generation test of a configuration file for data contracts based on a LLM.
@@ -126,7 +131,7 @@ if csv_file and doc_file and not extra_files:
     st.expander("Sample data content").dataframe(df, hide_index=True)
     st.expander("Data contract content").markdown(documentation)
     with st.status("Generating configuration...") as status:
-        resp = llm_configuration_generation(df, documentation, data_profile, openai_api_key)
+        resp = llm_configuration_generation(df, documentation, data_profile)
         status.update(
             label="Configuration generated successfully!", state="complete", expanded=False
         )
