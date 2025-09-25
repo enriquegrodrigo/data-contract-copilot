@@ -2,6 +2,7 @@ import json
 import time
 
 import pandas as pd
+import seaborn as sns
 import streamlit as st
 
 import src.expectation_manager as em
@@ -66,8 +67,6 @@ if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
     # Load expectations yaml as a Pydantic model and show in a table
     pydantic_contract = em.load_suite_yaml(data_contract_configuration_file, is_file=False)
 
-    st.write(pydantic_contract)
-
     # Show the data contract configuration in a table
     st.header("Data Contract Configuration:")
 
@@ -101,10 +100,6 @@ if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
 
                 # Show an the analysis of errors
                 fail_analysis = gx_utils.get_failed_expectations_summary(validation_results)
-
-                # Print json analysis for debugging
-                with st.expander("Show full JSON analysis"):
-                    st.json(fail_analysis)
 
                 # Display failure summary metrics
                 st.subheader("📊 Failure Summary")
@@ -158,20 +153,55 @@ if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
                 col1, col2 = st.columns(2)
 
                 with col1:
-                    st.write("**Failures by Expectation Type:**")
                     failure_by_type_df = pd.DataFrame([
                         {'Expectation Type': exp_type, 'Count': count}
                         for exp_type, count in fail_analysis['failure_summary']['failed_by_type'].items()
                     ])
-                    st.dataframe(failure_by_type_df, hide_index=True)
+                    import matplotlib.pyplot as plt
+                    import plotly.express as px
+
+                    fig = px.bar(
+                        failure_by_type_df,
+                        y="Expectation Type",
+                        x="Count",
+                        orientation="h",
+                        color="Expectation Type",
+                        text="Count"
+                    )
+                    fig.update_layout(
+                        title="Failures by Expectation Type",
+                        xaxis_title="Failure Count",
+                        yaxis_title="Expectation Type",
+                        xaxis=dict(
+                            tickmode='linear',
+                            tick0=0,
+                            dtick=1
+                        ),
+                        height=400
+                    )
+                    fig.update_traces(textposition='outside')
+                    st.plotly_chart(fig, use_container_width=True)
 
                 with col2:
-                    st.write("**Failures by Column:**")
-                    failure_by_column_df = pd.DataFrame([
-                        {'Column': column, 'Failure Count': count}
-                        for column, count in fail_analysis['failure_summary']['failed_by_column'].items()
-                    ])
-                    st.dataframe(failure_by_column_df, hide_index=True)
+                    severity_counts = {
+                        "Critical": len(fail_analysis['failure_summary']['critical_failures']),
+                        "Warning": len(fail_analysis['failure_summary']['warning_failures']),
+                        "Info": len(fail_analysis['failure_summary']['info_failures']),
+                    }
+                    severity_df = pd.DataFrame({
+                        "Severity": list(severity_counts.keys()),
+                        "Count": list(severity_counts.values())
+                    })
+                    pie_fig = px.pie(
+                        severity_df,
+                        names="Severity",
+                        values="Count",
+                        color="Severity",
+                        title="Failures by Severity",
+                        hole=0.4
+                    )
+                    pie_fig.update_traces(textinfo='percent+label')
+                    st.plotly_chart(pie_fig, use_container_width=True)
 
                 # Detailed view of specific failures
                 st.subheader("🔍 Detailed Failure Information")
@@ -187,11 +217,12 @@ if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
                         if exp['expectation_id'] == selected_expectation
                     )
 
-                    st.write(f"**Expectation:** {selected_exp['expectation_type']}")
-                    st.write(f"**Column:** {selected_exp['column']}")
-                    st.write(f"**Description:** {selected_exp['description']}")
-                    st.write(f"**Severity:** {selected_exp['severity'].upper()}")
-                    st.write(f"**Source:** {selected_exp['source']}")
+                    info_cols = st.columns(5)
+                    info_cols[0].markdown(f"**Expectation Type**<br>{selected_exp['expectation_type']}", unsafe_allow_html=True)
+                    info_cols[1].markdown(f"**Column**<br>{selected_exp['column']}", unsafe_allow_html=True)
+                    info_cols[2].markdown(f"**Severity**<br>{selected_exp['severity'].upper()}", unsafe_allow_html=True)
+                    info_cols[3].markdown(f"**Source**<br>{selected_exp['source']}", unsafe_allow_html=True)
+                    info_cols[4].markdown(f"**Description**<br>{selected_exp['description']}", unsafe_allow_html=True)
 
                     # Show failure details
                     failure_info = selected_exp['failure_info']
