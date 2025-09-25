@@ -1,20 +1,8 @@
-from typing import List, Literal, Optional, Union
 from enum import Enum
+from typing import List, Literal, Optional, Union
 
 import yaml
 from pydantic import BaseModel, Field, model_validator
-
-# =============================================================================
-# SEVERITY ENUM FOR GREAT EXPECTATIONS
-# =============================================================================
-
-class ExpectationSeverity(str, Enum):
-    """
-    Severity levels for Great Expectations, matching GX FailureSeverity enum
-    """
-    CRITICAL = "critical"
-    WARNING = "warning" 
-    INFO = "info"
 
 # =============================================================================
 # MODELOS INDIVIDUALES PARA CADA TIPO DE EXPECTATION
@@ -79,12 +67,12 @@ class ExpectColumnValuesToBeOfType(BaseModel):
     column: str = Field(..., description="Name of the column to validate type")
     type_: str = Field(..., description="Expected data type. Examples: 'int', 'float', 'str', 'bool', 'datetime'")
 
-class ExpectColumnValuesToMatchStrftimeFormat(BaseModel):
-    """Validates that string values match a datetime format"""
-    expectation_type: Literal["expect_column_values_to_match_strftime_format"] = "expect_column_values_to_match_strftime_format"
-    column: str = Field(..., description="Name of the column containing datetime strings")
-    strftime_format: str = Field(..., description="Expected datetime format string")
-    mostly: Optional[float] = Field(1.0, ge=0.0, le=1.0, description="Minimum fraction of values that must match the format")
+#class ExpectColumnValuesToMatchStrftimeFormat(BaseModel):
+#    """Validates that string values match a datetime format"""
+#    expectation_type: Literal["expect_column_values_to_match_strftime_format"] = "expect_column_values_to_match_strftime_format"
+#    column: str = Field(..., description="Name of the column containing datetime strings")
+#    strftime_format: str = Field(..., description="Expected datetime format string")
+#    mostly: Optional[float] = Field(1.0, ge=0.0, le=1.0, description="Minimum fraction of values that must match the format")
 
 # Statistical Consistency Expectations
 class ExpectColumnMeanToBeBetween(BaseModel):
@@ -161,12 +149,11 @@ GreatExpectation = Union[
     ExpectColumnToExist,
     ExpectColumnValuesToNotBeNull,
     ExpectColumnValuesToBeUnique,
-    ExpectCompoundColumnsToBeUnique,
     ExpectColumnValuesToBeInSet,
     ExpectColumnValuesToMatchRegex,
     ExpectColumnValuesToBeBetween,
     ExpectColumnValuesToBeOfType,
-    ExpectColumnValuesToMatchStrftimeFormat,
+#    ExpectColumnValuesToMatchStrftimeFormat,
     ExpectColumnMeanToBeBetween,
     ExpectTableRowCountToBeBetween,
     ExpectColumnMinToBeBetween,
@@ -186,7 +173,7 @@ class ExpectationWithMetadata(BaseModel):
     expectation: GreatExpectation = Field(..., description="The actual Great Expectations rule")
     description: str = Field(..., description="Detailed description of the expectation and its purpose")
     source: str = Field(..., description="Source of the expectation (e.g., 'Documentation', 'Data Profiling'). Provide context.")
-    severity: ExpectationSeverity = Field(ExpectationSeverity.CRITICAL, description="Severity level of the expectation failure (critical, warning, info)")
+    severity: Literal["critical", "warning", "info"] = Field("critical", description="Severity level of the expectation failure (critical, warning, info)")
 
 # =============================================================================
 # MODELO CONTENEDOR PARA LISTA DE EXPECTATIVAS CON METADATOS

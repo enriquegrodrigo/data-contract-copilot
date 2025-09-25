@@ -30,20 +30,16 @@ from great_expectations.expectations.expectation_configuration import \
     ExpectationConfiguration
 from pydantic import ValidationError
 
-# Import Great Expectations severity enum
-from great_expectations.expectations.metadata_types import FailureSeverity
-
 # Import the Pydantic models
-from src.expectations import (  # Individual expectation models
+from src.expectations import (  # Individual expectation models; ExpectColumnValuesToMatchStrftimeFormat,
     ExpectationWithMetadata, ExpectColumnMaxToBeBetween,
     ExpectColumnMeanToBeBetween, ExpectColumnMinToBeBetween,
     ExpectColumnSumToBeBetween, ExpectColumnToExist,
     ExpectColumnValuesToBeBetween, ExpectColumnValuesToBeInSet,
     ExpectColumnValuesToBeOfType, ExpectColumnValuesToBeUnique,
-    ExpectColumnValuesToMatchRegex, ExpectColumnValuesToMatchStrftimeFormat,
-    ExpectColumnValuesToNotBeNull, ExpectCompoundColumnsToBeUnique,
-    ExpectTableRowCountToBeBetween, GreatExpectation, GreatExpectationsSuite,
-    ExpectationSeverity)
+    ExpectColumnValuesToMatchRegex, ExpectColumnValuesToNotBeNull,
+    ExpectCompoundColumnsToBeUnique, ExpectTableRowCountToBeBetween,
+    GreatExpectation, GreatExpectationsSuite)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -171,9 +167,6 @@ class ExpectationManager:
                 else:
                     kwargs[key] = value
 
-        # Convert Pydantic severity to GX FailureSeverity
-        gx_severity = self._pydantic_severity_to_gx(exp_with_metadata.severity)
-
         # Create meta information from the wrapper
         meta = {
             "expectation_id": exp_with_metadata.id,
@@ -185,45 +178,10 @@ class ExpectationManager:
         config = ExpectationConfiguration(
             type=expectation_type,
             kwargs=kwargs,
-            meta=meta,
-            severity=gx_severity
+            meta=meta
         )
 
         return config
-
-    def _pydantic_severity_to_gx(self, pydantic_severity: ExpectationSeverity) -> FailureSeverity:
-        """
-        Convert Pydantic ExpectationSeverity to GX FailureSeverity
-
-        Args:
-            pydantic_severity: Pydantic severity enum value
-
-        Returns:
-            GX FailureSeverity enum value
-        """
-        severity_mapping = {
-            ExpectationSeverity.CRITICAL: FailureSeverity.CRITICAL,
-            ExpectationSeverity.WARNING: FailureSeverity.WARNING,
-            ExpectationSeverity.INFO: FailureSeverity.INFO
-        }
-        return severity_mapping[pydantic_severity]
-
-    def _gx_severity_to_pydantic(self, gx_severity: FailureSeverity) -> ExpectationSeverity:
-        """
-        Convert GX FailureSeverity to Pydantic ExpectationSeverity
-
-        Args:
-            gx_severity: GX FailureSeverity enum value
-
-        Returns:
-            Pydantic ExpectationSeverity enum value
-        """
-        severity_mapping = {
-            FailureSeverity.CRITICAL: ExpectationSeverity.CRITICAL,
-            FailureSeverity.WARNING: ExpectationSeverity.WARNING,
-            FailureSeverity.INFO: ExpectationSeverity.INFO
-        }
-        return severity_mapping.get(gx_severity, ExpectationSeverity.CRITICAL)
 
     # =============================================================================
     # GX TO PYDANTIC CONVERSION
@@ -287,9 +245,6 @@ class ExpectationManager:
         description = meta.get("description", f"Expectation for {expectation_type}")
         source = meta.get("source", "GX Suite Import")
 
-        # Convert GX severity to Pydantic severity
-        pydantic_severity = self._gx_severity_to_pydantic(gx_config.severity)
-
         # Create the appropriate Pydantic expectation model
         pydantic_expectation = self._create_pydantic_expectation(expectation_type, kwargs)
 
@@ -298,8 +253,7 @@ class ExpectationManager:
             id=exp_id,
             expectation=pydantic_expectation,
             description=description,
-            source=source,
-            severity=pydantic_severity
+            source=source
         )
 
         return exp_with_metadata
@@ -329,7 +283,7 @@ class ExpectationManager:
             "expect_column_values_to_match_regex": ExpectColumnValuesToMatchRegex,
             "expect_column_values_to_be_between": ExpectColumnValuesToBeBetween,
             "expect_column_values_to_be_of_type": ExpectColumnValuesToBeOfType,
-            "expect_column_values_to_match_strftime_format": ExpectColumnValuesToMatchStrftimeFormat,
+#            "expect_column_values_to_match_strftime_format": ExpectColumnValuesToMatchStrftimeFormat,
             "expect_column_mean_to_be_between": ExpectColumnMeanToBeBetween,
             "expect_table_row_count_to_be_between": ExpectTableRowCountToBeBetween,
             "expect_column_min_to_be_between": ExpectColumnMinToBeBetween,
@@ -445,13 +399,13 @@ class ExpectationManager:
                 validation_details["is_valid"] = False
 
             # Basic kwargs validation
-            kwargs = expectation.configuration.kwargs or {}
+            #kwargs = expectation.configuration.kwargs or {}
 
             # Check for required column parameter (most expectations need this)
-            column_expectations = [t for t in supported_types if t != "expect_table_row_count_to_be_between"]
-            if expectation.expectation_type in column_expectations and "column" not in kwargs:
-                validation_details["errors"].append("Missing required 'column' parameter")
-                validation_details["is_valid"] = False
+            #column_expectations = [t for t in supported_types if t != "expect_table_row_count_to_be_between"]
+            #if expectation.expectation_type in column_expectations and "column" not in kwargs:
+            #    validation_details["errors"].append("Missing required 'column' parameter")
+            #    validation_details["is_valid"] = False
 
         except Exception as e:
             validation_details["errors"].append(f"Validation error: {e}")
@@ -620,31 +574,16 @@ class ExpectationManager:
             Summary dictionary
         """
         expectation_types = {}
-        severity_counts = {}
 
         for exp_with_metadata in pydantic_suite.expectations:
             exp_type = exp_with_metadata.expectation.expectation_type
             expectation_types[exp_type] = expectation_types.get(exp_type, 0) + 1
-            
-            # Count by severity
-            severity = exp_with_metadata.severity.value
-            severity_counts[severity] = severity_counts.get(severity, 0) + 1
 
         return {
             "total_expectations": len(pydantic_suite.expectations),
             "expectation_types": expectation_types,
             "expectation_ids": [exp.id for exp in pydantic_suite.expectations],
-            "sources": list(set([exp.source for exp in pydantic_suite.expectations])),
-            "severity_distribution": severity_counts,
-            "expectation_details": [
-                {
-                    "id": exp.id,
-                    "type": exp.expectation.expectation_type,
-                    "severity": exp.severity.value,
-                    "source": exp.source
-                }
-                for exp in pydantic_suite.expectations
-            ]
+            "sources": list(set([exp.source for exp in pydantic_suite.expectations]))
         }
 
     def validate_pydantic_suite(self, pydantic_suite: GreatExpectationsSuite) -> Tuple[bool, Dict[str, Any]]:
