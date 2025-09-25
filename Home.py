@@ -23,7 +23,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Create three columns for main features
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4, col5 = st.columns([3, 1.5, 3, 1.5, 3])
 
 with col1:
     st.markdown("""
@@ -32,14 +32,14 @@ with col1:
         using artificial intelligence.
     """)
 
-with col2:
+with col3:
     st.markdown("""
         ### ✨ Intelligent Validation
         Validate your data against defined expectations and detect anomalies
         automatically.
     """)
 
-with col3:
+with col5:
     st.markdown("""
         ### 🔄 Easy Integration
         Easily integrate data contracts into your data pipeline
