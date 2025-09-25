@@ -252,17 +252,17 @@ if csv_file and doc_file and not extra_files:
             st.success("✅ Data contract validated successfully!")
             # Only center and expand the download button, not the success message
             st.markdown(
-            """
-            <div style="display: flex; justify-content: center;">
-                <div style="width: 100%; max-width: 600px;">
-            """,
-            unsafe_allow_html=True
+                """
+                <div style="display: flex; justify-content: center;">
+                    <div style="width: 100%; max-width: 600px;">
+                """,
+                unsafe_allow_html=True
             )
             st.download_button(
-            label="Download YAML Configuration",
-            data=manager.serialize_to_yaml(modified_suite),
-            file_name="modified_gx_configuration.yaml",
-            mime="application/x-yaml",
-            use_container_width=True
+                label="Download YAML Configuration",
+                data=manager.serialize_to_yaml(modified_suite),
+                file_name="modified_gx_configuration.yaml",
+                mime="application/x-yaml",
+                use_container_width=True
             )
             st.markdown("</div></div>", unsafe_allow_html=True)
