@@ -1,28 +1,98 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Home",
-    page_icon="👋",
+    page_title="Data Contract Copilot",
+    page_icon="🤖",
+    layout="wide"
 )
 
-st.write("# Welcome to Streamlit! 👋")
+# Main title with style
+st.markdown("""
+    <h1 style='text-align: center; margin-bottom: 2rem;'>
+        🤖 Data Contract Copilot
+    </h1>
+    """, unsafe_allow_html=True)
 
-st.sidebar.success("Select a demo above.")
+# Main description
+st.markdown("""
+    <div style='text-align: center; margin-bottom: 3rem;'>
+        <p style='font-size: 1.2em; color: #666;'>
+            Your intelligent assistant for data contract management
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.markdown(
-    """
-    Streamlit is an open-source app framework built specifically for
-    Machine Learning and Data Science projects.
-    **👈 Select a demo from the sidebar** to see some examples
-    of what Streamlit can do!
-    ### Want to learn more?
-    - Check out [streamlit.io](https://streamlit.io)
-    - Jump into our [documentation](https://docs.streamlit.io)
-    - Ask a question in our [community
-        forums](https://discuss.streamlit.io)
-    ### See more complex demos
-    - Use a neural net to [analyze the Udacity Self-driving Car Image
-        Dataset](https://github.com/streamlit/demo-self-driving)
-    - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-"""
-)
+# Create three columns for main features
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("""
+        ### 📝 Automatic Generation
+        Create data contracts automatically from your CSV files and documentation
+        using artificial intelligence.
+    """)
+
+with col2:
+    st.markdown("""
+        ### ✨ Intelligent Validation
+        Validate your data against defined expectations and detect anomalies
+        automatically.
+    """)
+
+with col3:
+    st.markdown("""
+        ### 🔄 Easy Integration
+        Easily integrate data contracts into your data pipeline
+        with Great Expectations.
+    """)
+
+# Separator
+st.markdown("<hr>", unsafe_allow_html=True)
+
+# Replace current quickstart section with this:
+col1, col2, col3, col4, col5 = st.columns([2, 2.1, 0.5, 2.1, 2])
+
+with col2.container(gap="large"):
+    # Quick start for Generate
+    st.markdown("""
+        ## 🚀 Generate Configuration
+
+        1. **Select "Generate Configuration"** in the sidebar
+        2. **Upload your files:**
+            - A CSV file with sample data
+            - A documentation file (TXT/MD)
+        3. **Configure your OpenAI** API key
+        4. **Done!** The copilot will generate your data contract
+    """, width="stretch")
+    if st.button("🔄 Generate New Configuration", use_container_width=True):
+        st.switch_page("pages/Generate_Configuration.py")
+
+# Quick start for Load
+with col4.container(gap="large"):
+    st.markdown("""
+        ## 📋 Load Configuration
+
+        1. **Select "Load Configuration"** in the sidebar
+        2. **Upload your files:**
+            - A CSV file with data to validate
+            - Your existing configuration (YAML/JSON)
+        3. **Review the results** of the validation
+        4. **Done!** You'll see your dataset analysis
+    """)
+    if st.button("📋 Load Existing Configuration", use_container_width=True):
+        st.switch_page("pages/Load_Configuration.py")
+
+# Footer with additional information
+st.markdown("<hr>", unsafe_allow_html=True)
+st.markdown("""
+    <div style='text-align: center; margin-top: 2rem;'>
+        <p>
+            Developed with ❤️ using
+            <a href="https://streamlit.io" target="_blank">Streamlit</a> and
+            <a href="https://greatexpectations.io" target="_blank">Great Expectations</a>
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Sidebar
+st.sidebar.success("Select an option to begin")
