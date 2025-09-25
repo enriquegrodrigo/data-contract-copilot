@@ -24,7 +24,7 @@ def get_pydantic_expectations_info():
         ExpectColumnToExist, ExpectColumnValuesToNotBeNull, ExpectColumnValuesToBeUnique,
         ExpectCompoundColumnsToBeUnique, ExpectColumnValuesToBeInSet,
         ExpectColumnValuesToMatchRegex, ExpectColumnValuesToBeBetween,
-        ExpectColumnValuesToBeOfType, ExpectColumnValuesToMatchStrftimeFormat,
+        ExpectColumnValuesToBeOfType,
         ExpectColumnMeanToBeBetween, ExpectTableRowCountToBeBetween, ExpectColumnMinToBeBetween,
         ExpectColumnMaxToBeBetween, ExpectColumnSumToBeBetween
     ]
