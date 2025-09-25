@@ -157,7 +157,7 @@ See `pyproject.toml` for complete dependency list.
 
 ## Disclaimer
 
-This project has been developed in the context of the 2025 Equinox Hackathon organized by Telefonica Digital Innovation.
+This project has been developed in the context of the 2025 Equinox Hackathon organized by Telefonica Digital Innovation on September 25-26, 2025.
 
 ---
 
