@@ -717,7 +717,7 @@ def save_suite_yaml(
     return manager.serialize_to_yaml(pydantic_suite, output_path)
 
 
-def load_suite_yaml(yaml_path: str) -> GreatExpectationsSuite:
+def load_suite_yaml(yaml_path: str, is_file: bool = True) -> GreatExpectationsSuite:
     """
     Convenience function to load Pydantic suite from YAML
 
@@ -728,4 +728,4 @@ def load_suite_yaml(yaml_path: str) -> GreatExpectationsSuite:
         Pydantic GreatExpectationsSuite object
     """
     manager = create_manager()
-    return manager.deserialize_from_yaml(yaml_path, is_file=True)
+    return manager.deserialize_from_yaml(yaml_path, is_file=is_file)
