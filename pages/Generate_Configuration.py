@@ -123,8 +123,12 @@ if csv_file and doc_file and not extra_files:
         )
 
     data = json.loads(resp.model_dump_json(indent=2))['expectations']
+    print(data)
+
     for item in data:
         item['enabled'] = True
+        item['expectation'] = json.dumps(item['expectation'].model_dump())
+
     data_table = pd.DataFrame(data)
     edited_data = st.data_editor(
         data_table,

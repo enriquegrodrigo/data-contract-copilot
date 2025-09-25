@@ -507,6 +507,8 @@ class ExpectationManager:
             # Convert to YAML
             yaml_data = pydantic_suite.model_dump(exclude_none=True)
             yaml_str = yaml.dump(yaml_data, default_flow_style=False, sort_keys=False, allow_unicode=True)
+            print(yaml_data)
+            print(yaml_str)
 
             # Save to file if path provided
             if output_path:
