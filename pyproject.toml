@@ -19,7 +19,9 @@ dependencies = [
     "python-dotenv (>=1.1.1,<2.0.0)",
     "numpy (<2.0)",
     "pandas (==2.1.4)",
-    "pyyaml (>=6.0,<7.0.0)"
+    "pyyaml (>=6.0,<7.0.0)",
+    "streamlit (>=1.50.0,<2.0.0)",
+    "watchdog (>=6.0.0,<7.0.0)"
 ]
 
 
