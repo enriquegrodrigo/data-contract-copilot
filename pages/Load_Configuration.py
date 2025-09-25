@@ -66,6 +66,8 @@ if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
     # Load expectations yaml as a Pydantic model and show in a table
     pydantic_contract = em.load_suite_yaml(data_contract_configuration_file, is_file=False)
 
+    st.write(pydantic_contract)
+
     # Show the data contract configuration in a table
     st.header("Data Contract Configuration:")
 
@@ -106,14 +108,19 @@ if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
 
                 # Display failure summary metrics
                 st.subheader("📊 Failure Summary")
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3, col4 = st.columns(4)
                 with col1:
                     st.metric("Total Failures", fail_analysis['total_failures'])
                 with col2:
-                    st.metric("Failed Columns", len(fail_analysis['failure_summary']['failed_by_column']))
-                with col3:
                     critical_failures = len(fail_analysis['failure_summary']['critical_failures'])
                     st.metric("Critical Failures", critical_failures)
+                with col3:
+                    warning_failures = len(fail_analysis['failure_summary']['warning_failures'])
+                    st.metric("Warning Failures", warning_failures)
+                with col4:
+                    info_failures = len(fail_analysis['failure_summary']['info_failures'])
+                    st.metric("Info Failures", info_failures)
+                    #t.metric("Failed Columns", len(fail_analysis['failure_summary']['failed_by_column']))
 
                 # Display failed expectations in a table
                 st.subheader("❌ Failed Expectations")

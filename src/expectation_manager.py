@@ -28,6 +28,7 @@ import yaml
 from great_expectations.core.expectation_suite import ExpectationSuite
 from great_expectations.expectations.expectation_configuration import \
     ExpectationConfiguration
+from great_expectations.expectations.metadata_types import FailureSeverity
 from pydantic import ValidationError
 
 # Import the Pydantic models
@@ -174,11 +175,19 @@ class ExpectationManager:
             "source": exp_with_metadata.source,
         }
 
+        if exp_with_metadata.severity == "warning":
+            severity = FailureSeverity.WARNING
+        elif exp_with_metadata.severity == "info":
+            severity = FailureSeverity.INFO
+        else:
+            severity = FailureSeverity.CRITICAL
+
         # Create the GX expectation configuration
         config = ExpectationConfiguration(
             type=expectation_type,
             kwargs=kwargs,
-            meta=meta
+            meta=meta,
+            severity=severity
         )
 
         return config
@@ -554,6 +563,7 @@ class ExpectationManager:
                 data = yaml.safe_load(yaml_input)
 
             # Create Pydantic suite from data
+            print(data)
             return GreatExpectationsSuite(**data)
 
         except ValidationError as e:

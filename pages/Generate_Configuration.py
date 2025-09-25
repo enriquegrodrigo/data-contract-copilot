@@ -127,7 +127,7 @@ if csv_file and doc_file and not extra_files:
 
     for item in data:
         item['enabled'] = True
-        item['expectation'] = json.dumps(item['expectation'].model_dump())
+        item['expectation'] = json.dumps(item['expectation'])
 
     data_table = pd.DataFrame(data)
     edited_data = st.data_editor(

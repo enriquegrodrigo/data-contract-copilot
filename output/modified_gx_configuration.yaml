@@ -1,0 +1,231 @@
+expectations:
+- id: orders.schema.column_exists.order_id
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: order_id
+  description: La columna order_id debe existir como parte del esquema contractual
+    del dataset de pedidos.
+  source: Documentation
+  severity: critical
+- id: orders.schema.column_exists.status
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: status
+  description: La columna status debe existir para describir el estado del pedido.
+  source: Documentation
+  severity: critical
+- id: orders.schema.column_exists.amount
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: amount
+  description: La columna amount debe existir para reportar el importe del pedido.
+  source: Documentation
+  severity: critical
+- id: orders.schema.column_exists.event_time
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: event_time
+  description: La columna event_time debe existir para auditoría temporal y frescura.
+  source: Documentation
+  severity: critical
+- id: orders.schema.column_exists.country_code
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: country_code
+  description: La columna country_code debe existir para segmentación geográfica.
+  source: Documentation
+  severity: critical
+- id: orders.types.status_is_str
+  expectation:
+    expectation_type: expect_column_values_to_be_of_type
+    column: status
+    type_: str
+  description: status debe ser texto (mayúsculas) según documentación y perfilado.
+  source: Documentation
+  severity: info
+- id: orders.types.amount_is_float
+  expectation:
+    expectation_type: expect_column_values_to_be_of_type
+    column: amount
+    type_: float
+  description: amount debe ser numérico (float) para cálculos financieros.
+  source: Documentation
+  severity: critical
+- id: orders.types.event_time_is_str
+  expectation:
+    expectation_type: expect_column_values_to_be_of_type
+    column: event_time
+    type_: str
+  description: event_time llega como cadena con formato ISO-8601 con zona; se valida
+    su formato con una regla adicional de regex.
+  source: Data Profiling
+  severity: warning
+- id: orders.types.country_code_is_str
+  expectation:
+    expectation_type: expect_column_values_to_be_of_type
+    column: country_code
+    type_: str
+  description: country_code debe ser cadena (código ISO-3166-1 alpha-2).
+  source: Documentation
+  severity: critical
+- id: orders.completeness.order_id_not_null
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: order_id
+    mostly: 1.0
+  description: order_id no debe ser nulo para preservar la identidad de pedidos.
+  source: Documentation
+  severity: critical
+- id: orders.completeness.status_not_null
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: status
+    mostly: 1.0
+  description: status no debe ser nulo para analítica y reporting de estados.
+  source: Documentation
+  severity: critical
+- id: orders.completeness.amount_not_null_mostly_95
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: amount
+    mostly: 0.95
+  description: amount debe estar informado; se permite hasta 5% nulos por la observación
+    actual (1/20) mientras se corrige el upstream.
+  source: Data Profiling
+  severity: warning
+- id: orders.completeness.event_time_not_null
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: event_time
+    mostly: 1.0
+  description: event_time no debe ser nulo para SLAs de frescura y auditoría.
+  source: Documentation
+  severity: critical
+- id: orders.completeness.country_code_not_null
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: country_code
+    mostly: 1.0
+  description: country_code no debe ser nulo para segmentación geográfica correcta.
+  source: Documentation
+  severity: critical
+- id: orders.identity.order_id_unique
+  expectation:
+    expectation_type: expect_column_values_to_be_unique
+    column: order_id
+    mostly: 1.0
+  description: order_id debe ser único por fila, conforme al contrato de identidad.
+  source: Documentation
+  severity: critical
+- id: orders.identity.event_time_mostly_unique_95
+  expectation:
+    expectation_type: expect_column_values_to_be_unique
+    column: event_time
+    mostly: 0.95
+  description: Se espera alta unicidad de event_time en este dataset de eventos (20/20
+    únicos observados), permitiendo pequeñas colisiones temporales.
+  source: Data Profiling
+  severity: warning
+- id: orders.domain.status_in_observed_set
+  expectation:
+    expectation_type: expect_column_values_to_be_in_set
+    column: status
+    value_set:
+    - CANCELED
+    - PENDING
+    - SHIPPED
+    - UNKNOWN
+    mostly: 1.0
+  description: status debe estar en los valores observados en el dataset actual para
+    detectar etiquetas nuevas no contempladas.
+  source: Data Profiling
+  severity: warning
+- id: orders.domain.status_in_doc_set_mostly_95
+  expectation:
+    expectation_type: expect_column_values_to_be_in_set
+    column: status
+    value_set:
+    - PENDING
+    - SHIPPED
+    - CANCELED
+    mostly: 0.95
+  description: status debería pertenecer al catálogo documentado; se tolera hasta
+    5% de valores fuera de catálogo (p.ej., UNKNOWN) antes de considerar fallo.
+  source: Documentation
+  severity: warning
+- id: orders.format.status_uppercase
+  expectation:
+    expectation_type: expect_column_values_to_match_regex
+    column: status
+    regex: ^[A-Z]+$
+    mostly: 1.0
+  description: status debe estar en mayúsculas según el estándar documentado.
+  source: Documentation
+  severity: critical
+- id: orders.domain.country_code_in_observed_set_mostly_95
+  expectation:
+    expectation_type: expect_column_values_to_be_in_set
+    column: country_code
+    value_set:
+    - CH
+    - DE
+    - ES
+    - FR
+    - IT
+    - NL
+    - PT
+    mostly: 0.95
+  description: country_code se valida contra los códigos observados para alertar sobre
+    nuevos países; se permite hasta 5% de valores nuevos válidos.
+  source: Data Profiling
+  severity: warning
+- id: orders.format.country_code_iso_alpha2
+  expectation:
+    expectation_type: expect_column_values_to_match_regex
+    column: country_code
+    regex: ^[A-Z]{2}$
+    mostly: 1.0
+  description: country_code debe cumplir el formato ISO-3166-1 alpha-2 (dos letras
+    mayúsculas).
+  source: Documentation
+  severity: critical
+- id: orders.range.amount_between_0_1000
+  expectation:
+    expectation_type: expect_column_values_to_be_between
+    column: amount
+    min_value: 0
+    max_value: 1000
+    mostly: 1.0
+  description: amount debe ser no negativo y no exceder el límite excepcional < 1000
+    EUR definido en documentación.
+  source: Documentation
+  severity: critical
+- id: orders.range.amount_typical_0_500_mostly_95
+  expectation:
+    expectation_type: expect_column_values_to_be_between
+    column: amount
+    min_value: 0
+    max_value: 500
+    mostly: 0.95
+  description: amount suele estar en el rango típico 0–500 EUR; se tolera hasta 5%
+    de outliers antes de alertar.
+  source: Documentation
+  severity: warning
+- id: orders.format.event_time_iso8601_tz
+  expectation:
+    expectation_type: expect_column_values_to_match_regex
+    column: event_time
+    regex: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$
+    mostly: 1.0
+  description: event_time debe cumplir formato ISO-8601 con zona horaria (p.ej., 2025-09-20T09:15:00+02:00).
+  source: Documentation
+  severity: critical
+- id: orders.volume.rowcount_between_15_30
+  expectation:
+    expectation_type: expect_table_row_count_to_be_between
+    min_value: 15
+    max_value: 30
+  description: El volumen diario esperado es 15–30 filas; desviaciones pueden indicar
+    problemas de ingesta.
+  source: Documentation
+  severity: warning

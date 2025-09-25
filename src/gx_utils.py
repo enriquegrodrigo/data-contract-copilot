@@ -111,6 +111,8 @@ def analyze_validation_results(validation_result):
         'failed_by_type': {},
         'failed_by_column': {},
         'critical_failures': [],
+        'warning_failures': [],
+        'info_failures': [],
         'most_common_failures': []
     }
 
@@ -134,6 +136,19 @@ def analyze_validation_results(validation_result):
                     'column': detail['column'],
                     'invalid_percentage': detail['failure_info']['invalid_percentage'] if detail['failure_info'] else 0
                 })
+            if detail['severity'] == 'warning':
+                failure_summary['warning_failures'].append({
+                    'expectation_id': detail['expectation_id'],
+                    'column': detail['column'],
+                    'invalid_percentage': detail['failure_info']['invalid_percentage'] if detail['failure_info'] else 0
+                })
+            if detail['severity'] == 'info':
+                failure_summary['info_failures'].append({
+                    'expectation_id': detail['expectation_id'],
+                    'column': detail['column'],
+                    'invalid_percentage': detail['failure_info']['invalid_percentage'] if detail['failure_info'] else 0
+                })
+
 
     # Identificar los fallos más comunes (por porcentaje de valores inválidos)
     failed_expectations = [d for d in expectation_details if d['status'] == 'FAIL' and d['failure_info']]
