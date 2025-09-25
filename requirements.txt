@@ -1,0 +1,24 @@
+# Great Expectations Rule Generator - Requirements
+
+# Core dependencies
+great-expectations>=0.18.0
+duckdb>=0.9.0
+pandas>=2.0.0
+fastmcp>=0.1.0
+
+# LLM and AI
+openai>=1.0.0
+instructor>=1.0.0
+pydantic>=2.0.0
+
+# Data processing
+python-dateutil>=2.8.0
+numpy>=1.24.0
+
+# Development and testing
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Optional: for enhanced functionality
+plotly>=5.0.0  # For data visualization
+streamlit>=1.28.0  # If building web interface

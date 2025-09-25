@@ -1,0 +1,610 @@
+
+Eres un experto en calidad de datos y Great Expectations. Tu tarea es analizar la documentación y el resumen de datos proporcionados
+para identificar un conjunto de reglas de calidad iniciales que sean críticas para el negocio y detectables con Great Expectations.
+
+IMPORTANTE: Solo puedes usar las expectativas de Great Expectations que están definidas en los modelos Pydantic proporcionados.
+
+## INFORMACIÓN DEL DATASET
+- Nombre: orders
+- Filas: 20
+- Columnas: 5
+
+## MUESTRA DE DATOS
+[
+  {
+    "order_id": 1001,
+    "status": "PENDING",
+    "amount": 49.9,
+    "event_time": "2025-09-20T09:15:00+02:00",
+    "country_code": "ES"
+  },
+  {
+    "order_id": 1002,
+    "status": "SHIPPED",
+    "amount": 120.0,
+    "event_time": "2025-09-20T10:05:00+02:00",
+    "country_code": "FR"
+  },
+  {
+    "order_id": 1003,
+    "status": "CANCELED",
+    "amount": 0.0,
+    "event_time": "2025-09-20T11:22:00+02:00",
+    "country_code": "DE"
+  }
+]
+
+## ANÁLISIS POR COLUMNA
+{
+  "order_id": {
+    "dtype": "int64",
+    "null_count": 0,
+    "unique_count": 20,
+    "sample_values": [
+      "1001",
+      "1002",
+      "1003",
+      "1004",
+      "1005"
+    ],
+    "is_categorical": false
+  },
+  "status": {
+    "dtype": "object",
+    "null_count": 0,
+    "unique_count": 4,
+    "sample_values": [
+      "PENDING",
+      "SHIPPED",
+      "CANCELED",
+      "SHIPPED",
+      "PENDING"
+    ],
+    "unique_values": [
+      "CANCELED",
+      "PENDING",
+      "SHIPPED",
+      "UNKNOWN"
+    ],
+    "is_categorical": true,
+    "value_frequencies": {
+      "SHIPPED": 9,
+      "PENDING": 8,
+      "CANCELED": 2,
+      "UNKNOWN": 1
+    }
+  },
+  "amount": {
+    "dtype": "float64",
+    "null_count": 1,
+    "unique_count": 18,
+    "sample_values": [
+      "49.9",
+      "120.0",
+      "0.0",
+      "75.5",
+      "15.99"
+    ],
+    "is_categorical": false
+  },
+  "event_time": {
+    "dtype": "object",
+    "null_count": 0,
+    "unique_count": 20,
+    "sample_values": [
+      "2025-09-20T09:15:00+02:00",
+      "2025-09-20T10:05:00+02:00",
+      "2025-09-20T11:22:00+02:00",
+      "2025-09-20T12:48:00+02:00",
+      "2025-09-20T14:03:00+02:00"
+    ],
+    "is_categorical": false
+  },
+  "country_code": {
+    "dtype": "object",
+    "null_count": 0,
+    "unique_count": 7,
+    "sample_values": [
+      "ES",
+      "FR",
+      "DE",
+      "IT",
+      "PT"
+    ],
+    "unique_values": [
+      "CH",
+      "DE",
+      "ES",
+      "FR",
+      "IT",
+      "NL",
+      "PT"
+    ],
+    "is_categorical": true,
+    "value_frequencies": {
+      "ES": 6,
+      "FR": 3,
+      "DE": 3,
+      "PT": 3,
+      "IT": 2,
+      "NL": 2,
+      "CH": 1
+    }
+  }
+}
+
+## OBSERVACIONES DE CALIDAD
+- Columnas con nulos: ['amount']
+- Posibles columnas ID: ['order_id', 'event_time']
+- Columnas categóricas: ['status', 'country_code']
+- Columnas numéricas: ['order_id', 'amount']
+## INFORMACIÓN DETALLADA DE COLUMNAS CATEGÓRICAS
+- status: valores posibles = ['CANCELED', 'PENDING', 'SHIPPED', 'UNKNOWN']
+  frecuencias = {'SHIPPED': 9, 'PENDING': 8, 'CANCELED': 2, 'UNKNOWN': 1}
+- country_code: valores posibles = ['CH', 'DE', 'ES', 'FR', 'IT', 'NL', 'PT']
+  frecuencias = {'ES': 6, 'FR': 3, 'DE': 3, 'PT': 3, 'IT': 2, 'NL': 2, 'CH': 1}
+
+
+## DOCUMENTACIÓN DISPONIBLE
+# Dataset: `orders`
+
+Este dataset contiene pedidos normalizados para analítica y reporting.
+
+## Esquema esperado (alto nivel)
+- `order_id` (string): identificador único del pedido.
+- `status` (string, UPPER): estado del pedido. Valores esperados: `PENDING`, `SHIPPED`, `CANCELED`.
+- `amount` (number, EUR): importe total del pedido. Normalmente **≥ 0**; rango típico **0–500 EUR** (excepcionalmente < 1000 EUR).
+- `event_time` (timestamp, Europe/Madrid): marca temporal del evento del pedido.
+- `country_code` (string): código de país en **ISO-3166-1 alpha-2** (p. ej., ES, FR, DE, IT, PT, NL, CH). No se limita a una lista cerrada si cumple ISO.
+
+## Reglas de negocio propuestas para el contrato de datos
+1. **Identidad**
+   - `order_id` es **único** por fila (no debe tener duplicados).
+
+2. **Dominios / Enumeraciones**
+   - `status` ∈ {`PENDING`, `SHIPPED`, `CANCELED`} (en mayúsculas).
+   - `country_code` debe cumplir **ISO-3166-1 alpha-2**.
+
+3. **Rangos y formatos**
+   - `amount` ≥ 0. Rango típico **0–500 EUR**; valores fuera de ese rango deben revisarse (excepcionales < 1000).
+   - `event_time` no debe estar en el **futuro**.
+
+4. **Frecuencia y Frescura (SLA)**
+   - Actualización **DIARIA**; el dataset debe estar disponible **antes de 08:00 Europe/Madrid** cada día natural.
+
+5. **Volumen esperado**
+   - Volumen diario habitual: **15–30 filas/día** (en entornos de prueba puede ser menor).
+
+## Notas de calidad y consideraciones
+- El dataset puede incluir pedidos cancelados con `amount = 0`.
+- Los valores de `status` adicionales o desconocidos deben registrarse como discrepancias.
+- El contrato debe incluir **justificación** (“grounding”) de cada regla, con referencia a esta documentación o a evidencias del perfilado/consultas.
+
+
+## EXPECTATIVAS DE GREAT EXPECTATIONS PERMITIDAS (desde modelos Pydantic):
+
+description: Validates that a specific column exists in the dataset
+properties:
+  column:
+    description: Name of the column that must exist
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_to_exist
+    default: expect_column_to_exist
+    title: Expectation Type
+    type: string
+required:
+- column
+title: ExpectColumnToExist
+type: object
+
+description: Validates that column values are not null
+properties:
+  column:
+    description: Name of the column to check for null values
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_values_to_not_be_null
+    default: expect_column_values_to_not_be_null
+    title: Expectation Type
+    type: string
+  mostly:
+    anyOf:
+    - maximum: 1.0
+      minimum: 0.0
+      type: number
+    - type: 'null'
+    default: 1.0
+    description: Minimum fraction of non-null values (0.0 to 1.0)
+    title: Mostly
+required:
+- column
+title: ExpectColumnValuesToNotBeNull
+type: object
+
+description: Validates that all values in a column are unique
+properties:
+  column:
+    description: Name of the column that should have unique values
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_values_to_be_unique
+    default: expect_column_values_to_be_unique
+    title: Expectation Type
+    type: string
+  mostly:
+    anyOf:
+    - maximum: 1.0
+      minimum: 0.0
+      type: number
+    - type: 'null'
+    default: 1.0
+    description: Minimum fraction of unique values
+    title: Mostly
+required:
+- column
+title: ExpectColumnValuesToBeUnique
+type: object
+
+description: Validates that combinations of multiple columns are unique
+properties:
+  column_list:
+    description: List of column names that together should form unique combinations
+    items:
+      type: string
+    title: Column List
+    type: array
+  expectation_type:
+    const: expect_compound_columns_to_be_unique
+    default: expect_compound_columns_to_be_unique
+    title: Expectation Type
+    type: string
+required:
+- column_list
+title: ExpectCompoundColumnsToBeUnique
+type: object
+
+description: Validates that column values are within a predefined set
+properties:
+  column:
+    description: Name of the column to validate against the value set
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_values_to_be_in_set
+    default: expect_column_values_to_be_in_set
+    title: Expectation Type
+    type: string
+  mostly:
+    anyOf:
+    - maximum: 1.0
+      minimum: 0.0
+      type: number
+    - type: 'null'
+    default: 1.0
+    description: Minimum fraction of values that must be in the set
+    title: Mostly
+  value_set:
+    description: List of valid values
+    items:
+      anyOf:
+      - type: string
+      - type: integer
+      - type: number
+    title: Value Set
+    type: array
+required:
+- column
+- value_set
+title: ExpectColumnValuesToBeInSet
+type: object
+
+description: Validates that column values match a regular expression pattern
+properties:
+  column:
+    description: Name of the column to validate with regex
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_values_to_match_regex
+    default: expect_column_values_to_match_regex
+    title: Expectation Type
+    type: string
+  mostly:
+    anyOf:
+    - maximum: 1.0
+      minimum: 0.0
+      type: number
+    - type: 'null'
+    default: 1.0
+    description: Minimum fraction of values that must match the regex
+    title: Mostly
+  regex:
+    description: Regular expression pattern
+    title: Regex
+    type: string
+required:
+- column
+- regex
+title: ExpectColumnValuesToMatchRegex
+type: object
+
+description: Validates that numeric column values fall within a specified range
+properties:
+  column:
+    description: Name of the numeric column to validate
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_values_to_be_between
+    default: expect_column_values_to_be_between
+    title: Expectation Type
+    type: string
+  max_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Maximum allowed value (inclusive)
+    title: Max Value
+  min_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Minimum allowed value (inclusive)
+    title: Min Value
+  mostly:
+    anyOf:
+    - maximum: 1.0
+      minimum: 0.0
+      type: number
+    - type: 'null'
+    default: 1.0
+    description: Minimum fraction of values that must be within range
+    title: Mostly
+required:
+- column
+title: ExpectColumnValuesToBeBetween
+type: object
+
+description: Validates that column values are of the expected data type
+properties:
+  column:
+    description: Name of the column to validate type
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_values_to_be_of_type
+    default: expect_column_values_to_be_of_type
+    title: Expectation Type
+    type: string
+  type_:
+    description: 'Expected data type. Examples: ''int'', ''float'', ''str'', ''bool'',
+      ''datetime'''
+    title: Type
+    type: string
+required:
+- column
+- type_
+title: ExpectColumnValuesToBeOfType
+type: object
+
+description: Validates that string values match a datetime format
+properties:
+  column:
+    description: Name of the column containing datetime strings
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_values_to_match_strftime_format
+    default: expect_column_values_to_match_strftime_format
+    title: Expectation Type
+    type: string
+  mostly:
+    anyOf:
+    - maximum: 1.0
+      minimum: 0.0
+      type: number
+    - type: 'null'
+    default: 1.0
+    description: Minimum fraction of values that must match the format
+    title: Mostly
+  strftime_format:
+    description: Expected datetime format string
+    title: Strftime Format
+    type: string
+required:
+- column
+- strftime_format
+title: ExpectColumnValuesToMatchStrftimeFormat
+type: object
+
+description: Validates that the mean of a numeric column falls within expected bounds
+properties:
+  column:
+    description: Name of the numeric column to calculate mean
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_mean_to_be_between
+    default: expect_column_mean_to_be_between
+    title: Expectation Type
+    type: string
+  max_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Maximum expected mean value
+    title: Max Value
+  min_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Minimum expected mean value
+    title: Min Value
+required:
+- column
+title: ExpectColumnMeanToBeBetween
+type: object
+
+description: Validates that the total number of rows falls within expected bounds
+properties:
+  expectation_type:
+    const: expect_table_row_count_to_be_between
+    default: expect_table_row_count_to_be_between
+    title: Expectation Type
+    type: string
+  max_value:
+    anyOf:
+    - type: integer
+    - type: 'null'
+    default: null
+    description: Maximum expected number of rows
+    title: Max Value
+  min_value:
+    anyOf:
+    - type: integer
+    - type: 'null'
+    default: null
+    description: Minimum expected number of rows
+    title: Min Value
+title: ExpectTableRowCountToBeBetween
+type: object
+
+description: Validates that the minimum value in a column falls within expected bounds
+properties:
+  column:
+    description: Name of the numeric column
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_min_to_be_between
+    default: expect_column_min_to_be_between
+    title: Expectation Type
+    type: string
+  max_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Maximum expected minimum value
+    title: Max Value
+  min_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Minimum expected minimum value
+    title: Min Value
+required:
+- column
+title: ExpectColumnMinToBeBetween
+type: object
+
+description: Validates that the maximum value in a column falls within expected bounds
+properties:
+  column:
+    description: Name of the numeric column
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_max_to_be_between
+    default: expect_column_max_to_be_between
+    title: Expectation Type
+    type: string
+  max_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Maximum expected maximum value
+    title: Max Value
+  min_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Minimum expected maximum value
+    title: Min Value
+required:
+- column
+title: ExpectColumnMaxToBeBetween
+type: object
+
+description: Validates that the sum of values in a column falls within expected bounds
+properties:
+  column:
+    description: Name of the numeric column to sum
+    title: Column
+    type: string
+  expectation_type:
+    const: expect_column_sum_to_be_between
+    default: expect_column_sum_to_be_between
+    title: Expectation Type
+    type: string
+  max_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Maximum expected sum
+    title: Max Value
+  min_value:
+    anyOf:
+    - type: integer
+    - type: number
+    - type: 'null'
+    default: null
+    description: Minimum expected sum
+    title: Min Value
+required:
+- column
+title: ExpectColumnSumToBeBetween
+type: object
+
+
+
+## INSTRUCCIONES
+Por favor, analiza esta información y genera un GreatExpectationsSuite completo con:
+
+1. **Reglas de validación críticas para este dataset**
+   - Usa SOLO las expectativas definidas en los modelos Pydantic listados arriba
+   - Especifica exactamente qué expectativa usar y con qué parámetros
+   - Prioriza reglas críticas para la integridad del negocio
+
+2. **Expectativas específicas recomendadas**
+   - Para columnas categóricas, usa los valores exactos observados en expect_column_values_to_be_in_set
+   - Para columnas numéricas, define rangos apropiados con expect_column_values_to_be_between
+   - Para columnas ID, usa expect_column_values_to_be_unique
+   - Para completitud, usa expect_column_values_to_not_be_null con parámetro 'mostly' apropiado
+
+3. **Metadatos detallados**
+   - Proporciona IDs descriptivos para cada expectativa
+   - Incluye descripciones claras de por qué cada expectativa es importante
+   - Especifica la fuente de la recomendación (datos observados, documentación, etc.)
+
+4. **Uso de información categórica específica**
+   - Para las columnas categóricas detectadas, usa los valores únicos exactos observados
+   - Considera las frecuencias para determinar si usar parámetro 'mostly'
+
+RESTRICCIONES CRÍTICAS:
+- NUNCA inventes expectativas que no estén en los modelos Pydantic
+- SIEMPRE usa los nombres exactos de parámetros definidos en los modelos
+- USA los valores categóricos exactos observados en los datos
+- Considera los parámetros requeridos vs opcionales según los modelos Pydantic
+- Usa parámetros 'mostly' cuando sea apropiado para tolerancia realista

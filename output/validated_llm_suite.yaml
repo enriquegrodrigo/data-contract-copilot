@@ -1,0 +1,215 @@
+expectations:
+- id: orders.columns.order_id.exists
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: order_id
+  description: La columna 'order_id' debe existir según el esquema esperado del dataset.
+  source: Documentation - Esquema esperado
+- id: orders.columns.status.exists
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: status
+  description: La columna 'status' debe existir según el esquema esperado del dataset.
+  source: Documentation - Esquema esperado
+- id: orders.columns.amount.exists
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: amount
+  description: La columna 'amount' debe existir según el esquema esperado del dataset.
+  source: Documentation - Esquema esperado
+- id: orders.columns.event_time.exists
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: event_time
+  description: La columna 'event_time' debe existir según el esquema esperado del
+    dataset.
+  source: Documentation - Esquema esperado
+- id: orders.columns.country_code.exists
+  expectation:
+    expectation_type: expect_column_to_exist
+    column: country_code
+  description: La columna 'country_code' debe existir según el esquema esperado del
+    dataset.
+  source: Documentation - Esquema esperado
+- id: orders.table.row_count.daily_range
+  expectation:
+    expectation_type: expect_table_row_count_to_be_between
+    min_value: 15
+    max_value: 30
+  description: El volumen diario esperado es de 15 a 30 filas; fuera de ese rango
+    indica problemas de ingesta o frescura.
+  source: Documentation - Volumen esperado
+- id: orders.order_id.type.int
+  expectation:
+    expectation_type: expect_column_values_to_be_of_type
+    column: order_id
+    type_: int
+  description: 'El tipo de ''order_id'' se valida como entero para alinear con el
+    perfilado (int64). Nota: la documentación indica string; revisar contrato si procede.'
+  source: Data Profiling + Documentation
+- id: orders.status.type.str
+  expectation:
+    expectation_type: expect_column_values_to_be_of_type
+    column: status
+    type_: str
+  description: '''status'' debe ser texto, consistente con el esquema y uso analítico.'
+  source: Documentation + Data Profiling
+- id: orders.amount.type.float
+  expectation:
+    expectation_type: expect_column_values_to_be_of_type
+    column: amount
+    type_: float
+  description: '''amount'' debe ser numérico (float) para cálculos de importes.'
+  source: Data Profiling + Documentation
+- id: orders.event_time.type.str
+  expectation:
+    expectation_type: expect_column_values_to_be_of_type
+    column: event_time
+    type_: str
+  description: '''event_time'' se valida como cadena con formato ISO-8601 con zona
+    horaria según el dataset.'
+  source: Documentation + Data Profiling
+- id: orders.country_code.type.str
+  expectation:
+    expectation_type: expect_column_values_to_be_of_type
+    column: country_code
+    type_: str
+  description: '''country_code'' debe ser texto (código ISO alpha-2).'
+  source: Documentation + Data Profiling
+- id: orders.order_id.not_null
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: order_id
+    mostly: 1.0
+  description: '''order_id'' no debe ser nulo; es clave para identidad y joins.'
+  source: Documentation - Identidad
+- id: orders.status.not_null
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: status
+    mostly: 1.0
+  description: '''status'' no debe ser nulo para consistencia del estado del pedido.'
+  source: Documentation - Esquema esperado
+- id: orders.amount.not_null.mostly_95
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: amount
+    mostly: 0.95
+  description: '''amount'' idealmente no debe ser nulo. Se permite hasta un 5% nulo
+    (observado 1/20) para tolerancia operativa.'
+  source: Data Profiling + Documentation
+- id: orders.event_time.not_null
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: event_time
+    mostly: 1.0
+  description: '''event_time'' no debe ser nulo; es clave para ordenación temporal
+    y frescura.'
+  source: Documentation - Esquema esperado
+- id: orders.country_code.not_null
+  expectation:
+    expectation_type: expect_column_values_to_not_be_null
+    column: country_code
+    mostly: 1.0
+  description: '''country_code'' no debe ser nulo para análisis geográfico.'
+  source: Documentation - Esquema esperado
+- id: orders.order_id.unique
+  expectation:
+    expectation_type: expect_column_values_to_be_unique
+    column: order_id
+    mostly: 1.0
+  description: '''order_id'' debe ser único por fila, garantizando identidad de pedido.'
+  source: Documentation - Identidad
+- id: orders.status.in_set.observed
+  expectation:
+    expectation_type: expect_column_values_to_be_in_set
+    column: status
+    value_set:
+    - CANCELED
+    - PENDING
+    - SHIPPED
+    - UNKNOWN
+    mostly: 1.0
+  description: Dominios de 'status' observados en el dataset actual. Controla valores
+    no vistos que puedan indicar errores de mapeo.
+  source: Data Profiling
+- id: orders.status.uppercase.regex
+  expectation:
+    expectation_type: expect_column_values_to_match_regex
+    column: status
+    regex: ^[A-Z]+$
+    mostly: 1.0
+  description: '''status'' debe estar en MAYÚSCULAS según el contrato.'
+  source: Documentation - Dominios/Enumeraciones
+- id: orders.status.in_set.contract.mostly_95
+  expectation:
+    expectation_type: expect_column_values_to_be_in_set
+    column: status
+    value_set:
+    - PENDING
+    - SHIPPED
+    - CANCELED
+    mostly: 0.95
+  description: 'Contrato de negocio: ''status'' ∈ {PENDING, SHIPPED, CANCELED}. Se
+    permite hasta 5% fuera (p.ej., ''UNKNOWN'') como discrepancias controladas.'
+  source: Documentation - Dominios/Enumeraciones
+- id: orders.country_code.in_set.observed.mostly_95
+  expectation:
+    expectation_type: expect_column_values_to_be_in_set
+    column: country_code
+    value_set:
+    - CH
+    - DE
+    - ES
+    - FR
+    - IT
+    - NL
+    - PT
+    mostly: 0.95
+  description: Lista de códigos de país observados actualmente. Se permite 5% de valores
+    nuevos para no bloquear países ISO válidos no vistos aún.
+  source: Data Profiling
+- id: orders.country_code.iso_alpha2_regex
+  expectation:
+    expectation_type: expect_column_values_to_match_regex
+    column: country_code
+    regex: ^[A-Z]{2}$
+    mostly: 1.0
+  description: 'Formato ISO-3166-1 alpha-2: dos letras mayúsculas.'
+  source: Documentation - Dominios/ISO
+- id: orders.amount.range_0_1000
+  expectation:
+    expectation_type: expect_column_values_to_be_between
+    column: amount
+    min_value: 0
+    max_value: 1000
+    mostly: 1.0
+  description: 'Regla de negocio: importe ≥ 0; valores típicos 0–500 EUR; excepcionalmente
+    < 1000 EUR.'
+  source: Documentation - Rangos y formatos
+- id: orders.amount.mean_typical_0_500
+  expectation:
+    expectation_type: expect_column_mean_to_be_between
+    column: amount
+    min_value: 0
+    max_value: 500
+  description: El importe medio esperado está en el rango típico 0–500 EUR; valores
+    fuera sugieren sesgos o errores.
+  source: Documentation - Rangos típicos
+- id: orders.amount.max_cap_1000
+  expectation:
+    expectation_type: expect_column_max_to_be_between
+    column: amount
+    min_value: 0
+    max_value: 1000
+  description: El máximo de 'amount' debe ser < 1000 EUR (excepcional máximo permitido).
+  source: Documentation - Rangos y formatos
+- id: orders.event_time.iso8601_tz_regex
+  expectation:
+    expectation_type: expect_column_values_to_match_regex
+    column: event_time
+    regex: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$
+    mostly: 1.0
+  description: '''event_time'' debe cumplir formato ISO-8601 con zona horaria explícita
+    (ej. 2025-09-20T10:05:00+02:00).'
+  source: Documentation - Formato temporal
