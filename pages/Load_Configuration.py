@@ -11,8 +11,6 @@ import src.gx_utils as gx_utils
 st.set_page_config(page_title="Load Configuration", page_icon="⚙️")
 
 st.markdown("# ⚙️ Load Configuration")
-#st.sidebar.header("🔧 Configuration")
-#openai_api_key = st.sidebar.text_input("🔑 OpenAI API Key", key="api_key", type="password")
 st.write(
     """
     📋 This is a load test of a configuration file for data contracts.
