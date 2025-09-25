@@ -53,26 +53,26 @@ Data Contract Copilot is an AI-powered tool that automatically generates, valida
 
 The application provides two main workflows:
 
-#### 1. 🔄 Generate Configuration
+#### 1. 🔄 Generate Data Contract
 
-1. Navigate to "Generate Configuration" in the sidebar
+1. Navigate to "Generate Data Contract" in the sidebar
 2. Upload your files:
    - **CSV file**: Sample data for analysis
    - **Documentation file**: Business rules and requirements (TXT/MD format)
 3. Let the AI generate your data contract automatically
-4. Edit and save the generated configuration
+4. Edit and save the generated data contract
 
-#### 2. 📋 Load Configuration
+#### 2. 📋 Load Data Contract
 
-1. Navigate to "Load Configuration" in the sidebar
+1. Navigate to "Load Data Contract" in the sidebar
 2. Upload your files:
    - **CSV file**: Data to validate
-   - **Configuration file**: Existing data contract (YAML/JSON format)
+   - **Data contract file**: Existing data contract (YAML/JSON format)
 3. Review validation results and analysis
 
 ### Python API
 
-You can also use configuration downloaded easily in your Python projects:
+You can also use your downloaded data contract easily in your Python projects:
 
 ```python
 from src.expectation_manager import ExpectationManager
@@ -114,8 +114,8 @@ The framework supports various Great Expectations rules:
 data-contract-copilot/
 ├── Home.py                     # Main Streamlit application entry point
 ├── pages/                      # Streamlit pages
-│   ├── Generate_Configuration.py   # AI-powered configuration generation
-│   └── Load_Configuration.py       # Configuration loading and validation
+│   ├── Generate_Data_Contract.py   # AI-powered data contract generation
+│   └── Load_Data_Contract.py       # Data contract loading and validation
 ├── src/                        # Core library code
 │   ├── expectation_manager.py     # Great Expectations integration
 │   ├── expectations.py            # Pydantic expectation models

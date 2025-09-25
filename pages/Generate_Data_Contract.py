@@ -77,12 +77,12 @@ def transform_json_structure(df):
     return output
 
 
-st.set_page_config(page_title="Generate Configuration", page_icon="⚙️")
+st.set_page_config(page_title="Generate Data Contract", page_icon="⚙️")
 
-st.markdown("# ⚙️ Generate Configuration")
+st.markdown("# ⚙️ Generate Data Contract")
 st.write(
     """
-    **This is a generation test of a configuration file for data contracts based on a LLM.**
+    **This is a tool for generating a data contract file based on a LLM.**
 
     📂 **You need to upload two files:**
 
@@ -90,7 +90,7 @@ st.write(
 
     &nbsp;&nbsp;&nbsp;&nbsp;2️⃣ Description of the data contract (`.txt` or `.md` format)
 
-    ⏳ After uploading the files, the application will process them and send them to the LLM to generate a configuration file.
+    ⏳ After uploading the files, the application will process them and send them to the LLM to generate a data contract file.
     """
 )
 
@@ -143,13 +143,13 @@ if csv_file and doc_file and not extra_files:
 
     st.header("📊 Provided Data Explorer")
     st.dataframe(df, hide_index=True)
-    st.expander("Data contract content").markdown(documentation)
+    st.expander("Documentation provided").markdown(documentation)
 
     st.header("🤖 Data Contract Generator")
-    with st.status("Generating configuration...") as status:
+    with st.status("Generating data contract...") as status:
         resp = llm_configuration_generation(df, documentation, data_profile)
         status.update(
-            label="Configuration generated successfully!", state="complete", expanded=False
+            label="Data contract generated successfully!", state="complete", expanded=False
         )
     data = json.loads(resp.model_dump_json(indent=2))['expectations']
 
@@ -170,7 +170,8 @@ if csv_file and doc_file and not extra_files:
         },
         column_order=('id', 'expectation', 'severity', 'source', 'description', 'enabled'),
         width="stretch",
-        hide_index=True
+        hide_index=True,
+        num_rows="dynamic"
     )
 
     # Convert edited data back to pydantic model
@@ -262,9 +263,9 @@ if csv_file and doc_file and not extra_files:
                 unsafe_allow_html=True
             )
             st.download_button(
-                label="Download YAML Configuration",
+                label="Download YAML Data Contract",
                 data=manager.serialize_to_yaml(modified_suite),
-                file_name="modified_gx_configuration.yaml",
+                file_name="modified_gx_data_contract.yaml",
                 mime="application/x-yaml",
                 use_container_width=True
             )

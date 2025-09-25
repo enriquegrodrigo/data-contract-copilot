@@ -8,12 +8,12 @@ import streamlit as st
 import src.expectation_manager as em
 import src.gx_utils as gx_utils
 
-st.set_page_config(page_title="Load Configuration", page_icon="⚙️")
+st.set_page_config(page_title="Test Data Contract", page_icon="⚙️")
 
-st.markdown("# ⚙️ Load Configuration")
+st.markdown("# ⚙️ Load Data Contract")
 st.write(
     """
-    📝 **Load Test for Data Contract Configuration**
+    📝 **Test for Data Contract**
 
     📂 Please upload the following files:
 
@@ -30,7 +30,7 @@ st.write(
 st.divider()
 
 uploaded_files = st.file_uploader(
-    "📤 Upload sample data (csv) and the configuration file of the data contract (yaml):",
+    "📤 Upload sample data (csv) and the data contract file of the data contract (yaml):",
     type=["csv", "yaml"], accept_multiple_files=True
 )
 
@@ -99,8 +99,8 @@ if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
     st.divider()
 
     st.header("🔍 Validation Results")
-    # Allow user to validate the configuration
-    with st.spinner("Validating configuration..."):
+    # Allow user to validate the data contract
+    with st.spinner("Validating Data Contract..."):
         time.sleep(1)  # Simulate some processing time
         try:
             validation_results = gx_utils.run_gx_dataset_validation(

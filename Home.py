@@ -55,32 +55,32 @@ col1, col2, col3, col4, col5 = st.columns([2, 2.1, 0.5, 2.1, 2])
 with col2.container(gap="large"):
     # Quick start for Generate
     st.markdown("""
-        ## 🚀 Generate Configuration
+        ## 🚀 Gen Data Contract
 
-        1. **Select "Generate Configuration"** in the sidebar
+        1. **Select "Generate Data Contract"** in the sidebar
         2. **Upload your files:**
             - A CSV file with sample data
             - A documentation file (TXT/MD)
         3. **Configure your OpenAI** API key
         4. **Done!** The copilot will generate your data contract
     """, width="stretch")
-    if st.button("🔄 Generate New Configuration", use_container_width=True):
-        st.switch_page("pages/Generate_Configuration.py")
+    if st.button("🔄 Generate New Data Contract", use_container_width=True):
+        st.switch_page("pages/Generate_Data_Contract.py")
 
 # Quick start for Load
 with col4.container(gap="large"):
     st.markdown("""
-        ## 📋 Load Configuration
+        ## 📋 Test Data Contract
 
-        1. **Select "Load Configuration"** in the sidebar
+        1. **Select "Test Data Contract"** in the sidebar
         2. **Upload your files:**
             - A CSV file with data to validate
-            - Your existing configuration (YAML/JSON)
+            - Your existing data contract (YAML/JSON)
         3. **Review the results** of the validation
         4. **Done!** You'll see your dataset analysis
     """)
-    if st.button("📋 Load Existing Configuration", use_container_width=True):
-        st.switch_page("pages/Load_Configuration.py")
+    if st.button("📋 Load Existing Data Contract", use_container_width=True):
+        st.switch_page("pages/Test_Data_Contract.py")
 
 # Footer with additional information
 st.markdown("<hr>", unsafe_allow_html=True)
