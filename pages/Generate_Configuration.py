@@ -9,19 +9,22 @@ from src.expectation_manager import create_manager, save_suite_yaml
 from src.expectations import GreatExpectationsSuite
 from src.gx_data_extractor import DataExtractor
 from src.gx_promt_utils import create_llm_prompt, prepare_data_analysis_prompt
+from src.expectations import (
+    ExpectColumnMaxToBeBetween, ExpectColumnMeanToBeBetween,
+    ExpectColumnMinToBeBetween, ExpectColumnSumToBeBetween,
+    ExpectColumnToExist, ExpectColumnValuesToBeBetween,
+    ExpectColumnValuesToBeInSet, ExpectColumnValuesToBeOfType,
+    ExpectColumnValuesToBeUnique, ExpectColumnValuesToMatchRegex,
+    ExpectColumnValuesToNotBeNull, ExpectTableRowCountToBeBetween)
 
 
 @st.cache_resource
-def llm_configuration_generation(csv_file, doc_file, openai_api_key):
+def llm_configuration_generation(df, documentation, data_profile, openai_api_key):
     """
     Genera un archivo de configuración de Great Expectations basado en un LLM
     usando la muestra de datos y la descripción del contrato de datos proporcionados.
     """
     st.write("Loading and processing files...")
-    extractor = DataExtractor(csv_file, doc_file)
-    df = extractor.load_csv()
-    documentation = extractor.load_documentation()
-    data_profile = extractor.get_data_profile()
 
     st.write("Creating data structure for LLM prompt...")
     prompt_data = prepare_data_analysis_prompt(data_profile, df, documentation)
@@ -116,14 +119,18 @@ if uploaded_files is not None:
 
 if csv_file and doc_file and not extra_files:
     st.success("Both files uploaded successfully!")
+    extractor = DataExtractor(csv_file, doc_file)
+    df = extractor.load_csv()
+    documentation = extractor.load_documentation()
+    data_profile = extractor.get_data_profile()
+    st.expander("Sample data content").dataframe(df, hide_index=True)
+    st.expander("Data contract content").markdown(documentation)
     with st.status("Generating configuration...") as status:
-        resp = llm_configuration_generation(csv_file, doc_file, openai_api_key)
+        resp = llm_configuration_generation(df, documentation, data_profile, openai_api_key)
         status.update(
             label="Configuration generated successfully!", state="complete", expanded=False
         )
-
     data = json.loads(resp.model_dump_json(indent=2))['expectations']
-    print(data)
 
     for item in data:
         item['enabled'] = True
@@ -144,82 +151,57 @@ if csv_file and doc_file and not extra_files:
         width="stretch",
         hide_index=True
     )
+
     # Convert edited data back to pydantic model
     def create_modified_pydantic_suite(original_suite, edited_df):
         """
         Create a modified pydantic suite based on user edits
         """
-
-
         # Convert edited dataframe to list of dictionaries
         edited_expectations = []
 
         for i in range(len(edited_df)):
             # Only include enabled expectations
             if edited_df.iloc[i]['enabled']:
-                try:
-                    # Parse the expectation JSON string from the edited table
-                    expectation_json_str = edited_df.iloc[i]['expectation']
+                # Parse the expectation JSON string from the edited table
+                expectation_json_str = edited_df.iloc[i]['expectation']
+                expectation_dict = json.loads(expectation_json_str)
 
-                    # If it's already a dict, use it directly, otherwise parse JSON
-                    #if isinstance(expectation_json_str, str):
-                    expectation_dict = json.loads(expectation_json_str)
-                    #else:
-                    #    expectation_dict = expectation_json_str
+                # Create the appropriate expectation object based on expectation_type
+                expectation_type = expectation_dict.get('expectation_type')
 
-                    # Create the appropriate expectation object based on expectation_type
-                    expectation_type = expectation_dict.get('expectation_type')
+                # Map expectation types to their corresponding classes
+                expectation_class_map = {
+                    'expect_column_to_exist': ExpectColumnToExist,
+                    'expect_column_values_to_not_be_null': ExpectColumnValuesToNotBeNull,
+                    'expect_column_values_to_be_unique': ExpectColumnValuesToBeUnique,
+                    'expect_column_values_to_be_in_set': ExpectColumnValuesToBeInSet,
+                    'expect_column_values_to_match_regex': ExpectColumnValuesToMatchRegex,
+                    'expect_column_values_to_be_between': ExpectColumnValuesToBeBetween,
+                    'expect_column_values_to_be_of_type': ExpectColumnValuesToBeOfType,
+                    'expect_column_mean_to_be_between': ExpectColumnMeanToBeBetween,
+                    'expect_table_row_count_to_be_between': ExpectTableRowCountToBeBetween,
+                    'expect_column_min_to_be_between': ExpectColumnMinToBeBetween,
+                    'expect_column_max_to_be_between': ExpectColumnMaxToBeBetween,
+                    'expect_column_sum_to_be_between': ExpectColumnSumToBeBetween,
+                }
 
-                    # Import all expectation classes dynamically
-                    from src.expectations import (
-                        ExpectColumnMaxToBeBetween,
-                        ExpectColumnMeanToBeBetween,
-                        ExpectColumnMinToBeBetween, ExpectColumnSumToBeBetween,
-                        ExpectColumnToExist, ExpectColumnValuesToBeBetween,
-                        ExpectColumnValuesToBeInSet,
-                        ExpectColumnValuesToBeOfType,
-                        ExpectColumnValuesToBeUnique,
-                        ExpectColumnValuesToMatchRegex,
-                        ExpectColumnValuesToNotBeNull,
-                        ExpectTableRowCountToBeBetween)
+                # Create the expectation object
+                if expectation_type in expectation_class_map:
+                    expectation_class = expectation_class_map[expectation_type]
+                    expectation_obj = expectation_class(**expectation_dict)
+                else:
+                    raise ValueError(f"Unknown expectation type: {expectation_type}")
 
-                    # Map expectation types to their corresponding classes
-                    expectation_class_map = {
-                        'expect_column_to_exist': ExpectColumnToExist,
-                        'expect_column_values_to_not_be_null': ExpectColumnValuesToNotBeNull,
-                        'expect_column_values_to_be_unique': ExpectColumnValuesToBeUnique,
-                        'expect_column_values_to_be_in_set': ExpectColumnValuesToBeInSet,
-                        'expect_column_values_to_match_regex': ExpectColumnValuesToMatchRegex,
-                        'expect_column_values_to_be_between': ExpectColumnValuesToBeBetween,
-                        'expect_column_values_to_be_of_type': ExpectColumnValuesToBeOfType,
-                        'expect_column_mean_to_be_between': ExpectColumnMeanToBeBetween,
-                        'expect_table_row_count_to_be_between': ExpectTableRowCountToBeBetween,
-                        'expect_column_min_to_be_between': ExpectColumnMinToBeBetween,
-                        'expect_column_max_to_be_between': ExpectColumnMaxToBeBetween,
-                        'expect_column_sum_to_be_between': ExpectColumnSumToBeBetween,
-                    }
-
-                    # Create the expectation object
-                    if expectation_type in expectation_class_map:
-                        expectation_class = expectation_class_map[expectation_type]
-                        expectation_obj = expectation_class(**expectation_dict)
-                    else:
-                        st.error(f"Unknown expectation type: {expectation_type}")
-                        continue
-
-                    # Create the complete expectation with metadata
-                    expectation_with_metadata = {
-                        'id': edited_df.iloc[i]['id'],
-                        'expectation': expectation_obj,
-                        'description': edited_df.iloc[i]['description'],
-                        'source': edited_df.iloc[i]['source'],
-                        'severity': edited_df.iloc[i]['severity']
-                    }
-                    edited_expectations.append(expectation_with_metadata)
-
-                except (Exception) as e:
-                    st.error(f"Error processing expectation {edited_df.iloc[i]['id']}: {e}")
-                    continue
+                # Create the complete expectation with metadata
+                expectation_with_metadata = {
+                    'id': edited_df.iloc[i]['id'],
+                    'expectation': expectation_obj,
+                    'description': edited_df.iloc[i]['description'],
+                    'source': edited_df.iloc[i]['source'],
+                    'severity': edited_df.iloc[i]['severity']
+                }
+                edited_expectations.append(expectation_with_metadata)
 
         # Create new pydantic model with edited data
         modified_suite_dict = {
@@ -231,44 +213,28 @@ if csv_file and doc_file and not extra_files:
         }
 
         # Create new pydantic instance
-        try:
-            new_suite = GreatExpectationsSuite(**modified_suite_dict)
-            return new_suite
-        except (ValueError, TypeError) as e:
-            st.error(f"Error creating modified pydantic suite: {e}")
-            return None
+        new_suite = GreatExpectationsSuite(**modified_suite_dict)
+        return new_suite
 
     # Create the modified pydantic suite
-    modified_suite = create_modified_pydantic_suite(resp, edited_data)
+    try:
+        modified_suite = create_modified_pydantic_suite(resp, edited_data)
+    except Exception as e:
+        st.error(f"Error creating modified suite: {e}")
+        modified_suite = None
 
     if modified_suite:
-        st.success("✅ Modified pydantic suite created successfully!")
-
-        # Display the modified suite
-        with st.expander("View Modified Pydantic Suite"):
-            st.json(modified_suite.model_dump_json(indent=2))
-
         # Validate the modified suite
         manager = create_manager()
-        validation_result = manager.validate_pydantic_suite(modified_suite)
-        st.write("**Validation result:**", validation_result[0])
-
         gx_suite = manager.pydantic_to_gx_suite(modified_suite)
         suite_validation = manager.validate_gx_suite(gx_suite)
-        st.write("**Validation result:**", suite_validation[0])
 
         # Optional: Save or download the modified suite
-        if validation_result[0]:
+        if suite_validation[0]:
+            st.success("✅ Data contract validated successfully!")
             st.download_button(
                 label="Download YAML Configuration",
                 data=manager.serialize_to_yaml(modified_suite),
                 file_name="modified_gx_configuration.yaml",
                 mime="application/x-yaml"
             )
-
-    # Debug information (can be removed in production)
-    with st.expander("Debug Information"):
-        st.write("**Edited Data JSON:**")
-        st.json(edited_data.to_json())
-        st.write("**Original Suite JSON:**")
-        st.json(resp.model_dump_json(indent=2))
