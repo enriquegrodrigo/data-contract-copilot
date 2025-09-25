@@ -91,6 +91,8 @@ st.write(
     """
 )
 
+st.divider()
+
 uploaded_files = st.file_uploader(
     "Upload sample data (csv) and description of the data contract (md):",
     type=["csv", "md", "txt"], accept_multiple_files=True
@@ -104,7 +106,6 @@ extra_files = False
 if uploaded_files is not None:
     for file in uploaded_files:
         if file.type == "text/csv" and not csv_file:
-            st.write(f"Sample data uploaded: {file.name}")
             csv_file = file
             extra_files = False
         elif file.type in ["text/plain", "application/octet-stream", "text/markdown"] and not doc_file:
@@ -125,16 +126,23 @@ elif doc_file is None and csv_file is not None:
     st.warning("Please upload a data contract description file in TXT/MD format.")
 elif csv_file is None and doc_file is not None:
     st.warning("Please upload a sample data file in CSV format.")
+else:
+    st.success("Both files uploaded successfully!")
 
+
+st.divider()
 
 if csv_file and doc_file and not extra_files:
-    st.success("Both files uploaded successfully!")
     extractor = DataExtractor(csv_file, doc_file)
     df = extractor.load_csv()
     documentation = extractor.load_documentation()
     data_profile = extractor.get_data_profile()
-    st.expander("Sample data content").dataframe(df, hide_index=True)
+
+    st.header("📊 Provided Data Explorer")
+    st.dataframe(df, hide_index=True)
     st.expander("Data contract content").markdown(documentation)
+
+    st.header("🤖 Data Contract Generator")
     with st.status("Generating configuration...") as status:
         resp = llm_configuration_generation(df, documentation, data_profile)
         status.update(
@@ -226,6 +234,7 @@ if csv_file and doc_file and not extra_files:
         new_suite = GreatExpectationsSuite(**modified_suite_dict)
         return new_suite
 
+    st.header("🔍 Validation Results")
     # Create the modified pydantic suite
     try:
         modified_suite = create_modified_pydantic_suite(resp, edited_data)
@@ -238,13 +247,22 @@ if csv_file and doc_file and not extra_files:
         manager = create_manager()
         gx_suite = manager.pydantic_to_gx_suite(modified_suite)
         suite_validation = manager.validate_gx_suite(gx_suite)
-
         # Optional: Save or download the modified suite
         if suite_validation[0]:
             st.success("✅ Data contract validated successfully!")
-            st.download_button(
-                label="Download YAML Configuration",
-                data=manager.serialize_to_yaml(modified_suite),
-                file_name="modified_gx_configuration.yaml",
-                mime="application/x-yaml"
+            # Only center and expand the download button, not the success message
+            st.markdown(
+            """
+            <div style="display: flex; justify-content: center;">
+                <div style="width: 100%; max-width: 600px;">
+            """,
+            unsafe_allow_html=True
             )
+            st.download_button(
+            label="Download YAML Configuration",
+            data=manager.serialize_to_yaml(modified_suite),
+            file_name="modified_gx_configuration.yaml",
+            mime="application/x-yaml",
+            use_container_width=True
+            )
+            st.markdown("</div></div>", unsafe_allow_html=True)

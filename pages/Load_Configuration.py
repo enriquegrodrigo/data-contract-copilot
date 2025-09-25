@@ -29,7 +29,6 @@ uploaded_files = st.file_uploader(
     type=["csv", "yaml"], accept_multiple_files=True
 )
 
-st.divider()
 
 sample_data_file = None
 sample_data_file_count = 0
@@ -59,7 +58,10 @@ elif data_contract_configuration_file_count == 0 and sample_data_file_count == 1
     st.warning("Please upload a data contract configuration file in JSON or YAML format.")
 elif sample_data_file_count == 0 and data_contract_configuration_file_count == 1:
     st.warning("Please upload a sample data file in CSV format.")
+else:
+    st.success("Both files uploaded successfully!")
 
+st.divider()
 
 if sample_data_file_count == 1 and data_contract_configuration_file_count == 1:
 
