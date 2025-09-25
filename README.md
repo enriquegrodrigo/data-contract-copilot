@@ -152,8 +152,8 @@ See `pyproject.toml` for complete dependency list.
 
 ## 👨‍💻 Authors
 
-**Enrique González**
-**Jesus Garcia Manzanas**
+- **Enrique González Rodrigo**
+- **Jesús García Manzanas**
 
 ## Disclaimer
 
