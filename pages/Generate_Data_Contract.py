@@ -97,7 +97,7 @@ st.write(
 st.divider()
 
 uploaded_files = st.file_uploader(
-    "Upload sample data (csv) and description of the data contract (md):",
+    "📤 Upload sample data (csv) and description of the data contract (md):",
     type=["csv", "md", "txt"], accept_multiple_files=True
 )
 # sample_data_file = 0
