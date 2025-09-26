@@ -57,11 +57,11 @@ with col2.container(gap="large"):
     st.markdown("""
         ## 🚀 Gen Data Contract
 
-        1. **Select "Generate Data Contract"** in the sidebar
-        2. **Upload your files:**
+        1. **Add your OpenAI** API key to .env file
+        2. **Select "Generate Data Contract"** in the sidebar
+        3. **Upload your files:**
             - A CSV file with sample data
             - A documentation file (TXT/MD)
-        3. **Configure your OpenAI** API key
         4. **Done!** The copilot will generate your data contract
     """, width="stretch")
     if st.button("🔄 Generate New Data Contract", use_container_width=True):
